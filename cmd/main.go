@@ -7,6 +7,7 @@ import (
 	"github.com/anieswahdie1/ara-medika-api.git/internal/routes"
 	"github.com/anieswahdie1/ara-medika-api.git/internal/services"
 	"github.com/anieswahdie1/ara-medika-api.git/internal/utils"
+	"github.com/anieswahdie1/ara-medika-api.git/pkg/validators"
 )
 
 func main() {
@@ -39,6 +40,9 @@ func main() {
 
 	// Initialize controllers
 	userController := controllers.NewUserController(userService, logger)
+
+	// Initialize validator
+	validators.Init() // Ini akan menginisialisasi validators.Validate
 
 	// Setup router
 	router := routes.InitRouter(
