@@ -37,9 +37,11 @@ func main() {
 
 	// Initialize services
 	userService := services.NewUserService(userRepo, logger)
+	authService := services.NewAuthService(userRepo, redisClient, cfg, logger)
 
 	// Initialize controllers
 	userController := controllers.NewUserController(userService, logger)
+	authController := controllers.NewAuthController(authService, userService, logger)
 
 	// Initialize validator
 	validators.Init() // Ini akan menginisialisasi validators.Validate
@@ -50,6 +52,7 @@ func main() {
 		redisClient,
 		logger,
 		userController,
+		authController,
 	)
 
 	// Start server

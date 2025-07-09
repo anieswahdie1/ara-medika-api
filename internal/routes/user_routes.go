@@ -18,6 +18,9 @@ func SetupUserRoutes(
 	userGroup := router.Group("/users")
 	userGroup.Use(middlewares.AuthMiddleware(cfg, redisClient))
 	{
+		// Routes untuk semua user terautentikasi
+		userGroup.GET("/me", userController.GetUserByID)
+		userGroup.PUT("/me", userController.UpdateUser)
 		// Routes untuk admin dan super_admin
 		userGroup.Use(middlewares.RoleMiddleware(string(entities.Admin), string(entities.SuperAdmin)))
 		{

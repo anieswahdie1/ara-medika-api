@@ -1,6 +1,10 @@
 package entities
 
-import "gorm.io/gorm"
+import (
+	"time"
+
+	"gorm.io/gorm"
+)
 
 type Role string
 
@@ -10,13 +14,20 @@ const (
 	User       Role = "user"
 )
 
+type Model struct {
+	ID        uint           `gorm:"primarykey" json:"id"`
+	CreatedAt time.Time      `json:"created_at"`
+	UpdatedAt time.Time      `json:"updated_at"`
+	DeletedAt gorm.DeletedAt `gorm:"index" json:"-"`
+}
+
 type Users struct {
-	gorm.Model
+	Model
 	Name     string `gorm:"not null" validate:"required,min=3,max=50"`
 	Email    string `gorm:"unique;not null" validate:"required,email"`
 	Password string `gorm:"not null" validate:"required,min=8"`
 	Role     Role   `gorm:"type:role;not null" validate:"required,role"`
-	Active   bool   `gorm:"default:true"`
+	Active   bool   `gorm:"default:true" json:"active"`
 }
 
 type UserCreateRequest struct {
@@ -29,4 +40,9 @@ type UserCreateRequest struct {
 type UserUpdateRequest struct {
 	Name  string `json:"name" validate:"omitempty,min=3,max=50"`
 	Email string `json:"email" validate:"omitempty,email"`
+}
+
+type ChangePasswordRequest struct {
+	OldPassword string `json:"old_password" validate:"required"`
+	NewPassword string `json:"new_password" validate:"required,min=8"`
 }

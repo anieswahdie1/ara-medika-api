@@ -14,6 +14,7 @@ func InitRouter(
 	redisClient *redis.Client,
 	logger *logrus.Logger,
 	userController *controllers.UserController,
+	authController *controllers.AuthController,
 ) *gin.Engine {
 	router := gin.New()
 	router.Use(gin.Recovery())
@@ -24,6 +25,7 @@ func InitRouter(
 
 	// Setup routes
 	SetupUserRoutes(router, cfg, redisClient, userController)
+	SetupAuthRoutes(router, cfg, redisClient, authController)
 
 	return router
 }

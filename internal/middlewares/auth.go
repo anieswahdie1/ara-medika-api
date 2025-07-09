@@ -19,16 +19,17 @@ func AuthMiddleware(cfg *configs.Config, redisClient *redis.Client) gin.HandlerF
 		}
 
 		tokenString := strings.Split(authHeader, " ")[1]
-		claims, err := utils.ValidateToken(cfg, tokenString)
-		if err != nil {
-			ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Invalid Token"})
-			return
-		}
 
 		// Check if token is blacklisted in Redis
 		val, err := redisClient.Get(ctx, tokenString).Result()
 		if err == nil && val == "blacklisted" {
 			ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Token has been invalidated"})
+			return
+		}
+
+		claims, err := utils.ValidateToken(cfg, tokenString)
+		if err != nil {
+			ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Invalid Token"})
 			return
 		}
 

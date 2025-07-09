@@ -2,6 +2,7 @@ package utils
 
 import (
 	"errors"
+	"strconv"
 	"time"
 
 	"github.com/anieswahdie1/ara-medika-api.git/internal/configs"
@@ -55,4 +56,24 @@ func ValidateToken(cfg *configs.Config, tokenString string) (*JWTClaims, error) 
 	}
 
 	return nil, errors.New("invalid token")
+}
+
+func ParseRefreshToken(cfg *configs.Config, refreshToken string) (uint, error) {
+	token, err := jwt.ParseWithClaims(refreshToken, &jwt.RegisteredClaims{}, func(token *jwt.Token) (interface{}, error) {
+		return []byte(cfg.JWTSecret), nil
+	})
+
+	if err != nil {
+		return 0, err
+	}
+
+	if claims, ok := token.Claims.(*jwt.RegisteredClaims); ok && token.Valid {
+		userID, err := strconv.ParseUint(claims.Subject, 10, 32)
+		if err != nil {
+			return 0, errors.New("invalid user ID in token")
+		}
+		return uint(userID), nil
+	}
+
+	return 0, errors.New("invalid token")
 }
