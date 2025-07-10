@@ -18,7 +18,22 @@ func AuthMiddleware(cfg *configs.Config, redisClient *redis.Client) gin.HandlerF
 			return
 		}
 
-		tokenString := strings.Split(authHeader, " ")[1]
+		// Periksa format header dengan lebih hati-hati
+		parts := strings.Split(authHeader, " ")
+		if len(parts) != 2 || parts[0] != "Bearer" {
+			ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
+				"error":           "Invalid authorization header format",
+				"expected_format": "Bearer <token>",
+				"received":        authHeader,
+			})
+			return
+		}
+
+		tokenString := parts[1]
+		if tokenString == "" {
+			ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Token cannot be empty"})
+			return
+		}
 
 		// Check if token is blacklisted in Redis
 		val, err := redisClient.Get(ctx, tokenString).Result()

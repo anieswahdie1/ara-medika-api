@@ -63,9 +63,15 @@ func (c *AuthController) Login(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, responses.TokenResponse{
+	token := responses.TokenResponse{
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken,
+	}
+
+	ctx.JSON(http.StatusOK, responses.Responses{
+		Code:        http.StatusOK,
+		Description: "SUCCESS",
+		Data:        token,
 	})
 }
 
