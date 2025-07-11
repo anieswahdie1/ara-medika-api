@@ -139,14 +139,27 @@ func (c *AuthController) Logout(ctx *gin.Context) {
 
 	if err := c.authService.Logout(tokenString, userID); err != nil {
 		c.logger.Errorf("Logout failed for user %d: %v", userID, err)
-		ctx.JSON(http.StatusInternalServerError, responses.ErrorResponse{
+
+		errs := responses.ErrorResponse{
 			Error: "Failed to logout",
+		}
+
+		ctx.JSON(http.StatusInternalServerError, responses.Responses{
+			Code:        http.StatusBadRequest,
+			Description: "BAD_REQUEST",
+			Data:        errs,
 		})
 		return
 	}
 
-	ctx.JSON(http.StatusOK, responses.SuccessResponse{
+	successMessage := responses.SuccessResponse{
 		Message: "Successfully logged out",
+	}
+
+	ctx.JSON(http.StatusOK, responses.Responses{
+		Code:        http.StatusOK,
+		Description: "SUCCESS",
+		Data:        successMessage,
 	})
 }
 
@@ -162,12 +175,21 @@ func (c *AuthController) Logout(ctx *gin.Context) {
 // @Failure 500 {object} responses.ErrorResponse
 // @Router /auth/me [get]
 func (c *AuthController) GetCurrentUser(ctx *gin.Context) {
+	var (
+		errMessage string
+	)
+
 	// Dapatkan userID dari context yang sudah diset oleh middleware
 	userID, exists := ctx.Get("userID")
 	if !exists {
 		c.logger.Error("UserID not found in context")
-		ctx.JSON(http.StatusUnauthorized, responses.ErrorResponse{
-			Error: "Unauthorized",
+
+		errMessage = "Unauthorized"
+
+		ctx.JSON(http.StatusUnauthorized, responses.Responses{
+			Code:        http.StatusUnauthorized,
+			Description: "UNAUTHORIZED",
+			Data:        errMessage,
 		})
 		return
 	}
@@ -177,24 +199,36 @@ func (c *AuthController) GetCurrentUser(ctx *gin.Context) {
 	if err != nil {
 		if err.Error() == "user not found" {
 			c.logger.Errorf("User not found for ID %d", userID)
-			ctx.JSON(http.StatusUnauthorized, responses.ErrorResponse{
-				Error: "User not found",
+
+			errMessage = "User not found"
+			ctx.JSON(http.StatusNotFound, responses.Responses{
+				Code:        http.StatusNotFound,
+				Description: "DATA_NOT_FOUND",
+				Data:        errMessage,
 			})
 			return
 		}
 		c.logger.Errorf("Failed to get user %d: %v", userID, err)
-		ctx.JSON(http.StatusInternalServerError, responses.ErrorResponse{
-			Error: "Failed to get user data",
+
+		errMessage = "Failed to get user data"
+		ctx.JSON(http.StatusInternalServerError, responses.Responses{
+			Code:        http.StatusInternalServerError,
+			Description: "INTERNAL_SERVER_ERROR",
+			Data:        errMessage,
 		})
 		return
 	}
 
 	// Format response (tampilkan hanya data yang diperlukan)
-	ctx.JSON(http.StatusOK, responses.UserResponse{
-		ID:        user.ID,
-		Name:      user.Name,
-		Email:     user.Email,
-		Role:      string(user.Role),
-		CreatedAt: user.CreatedAt,
+	ctx.JSON(http.StatusOK, responses.Responses{
+		Code:        http.StatusOK,
+		Description: "SUCCESS",
+		Data: responses.UserResponse{
+			ID:        user.ID,
+			Name:      user.Name,
+			Email:     user.Email,
+			Role:      string(user.Role),
+			CreatedAt: user.CreatedAt,
+		},
 	})
 }
