@@ -17,6 +17,7 @@ type UserService interface {
 	DeleteUser(id uint) error
 	ListUsers(limit, offset int) ([]entities.Users, error)
 	ChangePassword(userID uint, oldPassword, newPassword string) error
+	ListMenus(roles string) ([]entities.Menus, error)
 }
 
 type userService struct {
@@ -141,4 +142,13 @@ func (s *userService) ChangePassword(userID uint, oldPassword, newPassword strin
 
 	user.Password = hashedPassword
 	return s.userRepo.Update(user)
+}
+
+func (s *userService) ListMenus(roles string) ([]entities.Menus, error) {
+	menus, err := s.userRepo.FindAllMenus(roles)
+	if err != nil {
+		s.logger.Errorf("Failed to list menus: %v", err)
+		return nil, errors.New("failed to list menus")
+	}
+	return menus, nil
 }

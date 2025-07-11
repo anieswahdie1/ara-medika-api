@@ -219,16 +219,30 @@ func (c *AuthController) GetCurrentUser(ctx *gin.Context) {
 		return
 	}
 
+	menus, err := c.userService.ListMenus(string(user.Role))
+	if err != nil {
+		c.logger.Errorf("Failed to get menus: %v", err)
+
+		errMessage = "Failed to get menus"
+		ctx.JSON(http.StatusInternalServerError, responses.Responses{
+			Code:        http.StatusInternalServerError,
+			Description: "INTERNAL_SERVER_ERROR",
+			Data:        errMessage,
+		})
+		return
+	}
+
 	// Format response (tampilkan hanya data yang diperlukan)
 	ctx.JSON(http.StatusOK, responses.Responses{
 		Code:        http.StatusOK,
 		Description: "SUCCESS",
 		Data: responses.UserResponse{
-			ID:        user.ID,
-			Name:      user.Name,
-			Email:     user.Email,
-			Role:      string(user.Role),
-			CreatedAt: user.CreatedAt,
+			ID:         user.ID,
+			Name:       user.Name,
+			Email:      user.Email,
+			Role:       string(user.Role),
+			AccessMenu: menus,
+			CreatedAt:  user.CreatedAt,
 		},
 	})
 }
