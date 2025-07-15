@@ -16,10 +16,12 @@ func InitRouter(
 	userController *controllers.UserController,
 	authController *controllers.AuthController,
 ) *gin.Engine {
+
 	router := gin.New()
 	router.Use(gin.Recovery())
 
 	// Global middleware
+	router.Use(middlewares.ErrorHandler())
 	router.Use(middlewares.CORSMiddleware())
 	router.Use(middlewares.RequestLoggerMiddleware(logger))
 

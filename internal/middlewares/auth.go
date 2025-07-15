@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/anieswahdie1/ara-medika-api.git/internal/configs"
+	"github.com/anieswahdie1/ara-medika-api.git/internal/errors"
 	"github.com/anieswahdie1/ara-medika-api.git/internal/utils"
 	"github.com/gin-gonic/gin"
 	"github.com/redis/go-redis/v9"
@@ -14,7 +15,11 @@ func AuthMiddleware(cfg *configs.Config, redisClient *redis.Client) gin.HandlerF
 	return func(ctx *gin.Context) {
 		authHeader := ctx.GetHeader("Authorization")
 		if authHeader == "" {
-			ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Authorization header is required"})
+			ctx.Abort()
+			ctx.Error(errors.NewUnauthorizedError(
+				errors.CodeUnauthorized,
+				"Authorization header is required",
+			))
 			return
 		}
 
@@ -31,20 +36,32 @@ func AuthMiddleware(cfg *configs.Config, redisClient *redis.Client) gin.HandlerF
 
 		tokenString := parts[1]
 		if tokenString == "" {
-			ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Token cannot be empty"})
+			ctx.Abort()
+			ctx.Error(errors.NewUnauthorizedError(
+				errors.CodeUnauthorized,
+				"Token cannot be empty",
+			))
 			return
 		}
 
 		// Check if token is blacklisted in Redis
 		val, err := redisClient.Get(ctx, tokenString).Result()
 		if err == nil && val == "blacklisted" {
-			ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Token has been invalidated"})
+			ctx.Abort()
+			ctx.Error(errors.NewUnauthorizedError(
+				errors.CodeUnauthorized,
+				"Token has been invalidated",
+			))
 			return
 		}
 
 		claims, err := utils.ValidateToken(cfg, tokenString)
 		if err != nil {
-			ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Invalid Token"})
+			ctx.Abort()
+			ctx.Error(errors.NewUnauthorizedError(
+				errors.CodeUnauthorized,
+				"Invalid Token",
+			))
 			return
 		}
 

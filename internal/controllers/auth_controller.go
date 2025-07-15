@@ -1,9 +1,11 @@
 package controllers
 
 import (
+	"fmt"
 	"net/http"
 	"strings"
 
+	"github.com/anieswahdie1/ara-medika-api.git/internal/errors"
 	"github.com/anieswahdie1/ara-medika-api.git/internal/models/responses"
 	"github.com/anieswahdie1/ara-medika-api.git/internal/services"
 	"github.com/gin-gonic/gin"
@@ -16,11 +18,7 @@ type AuthController struct {
 	logger      *logrus.Logger
 }
 
-func NewAuthController(
-	authService services.AuthService,
-	userService services.UserService,
-	logger *logrus.Logger,
-) *AuthController {
+func NewAuthController(authService services.AuthService, userService services.UserService, logger *logrus.Logger) *AuthController {
 	return &AuthController{
 		authService: authService,
 		userService: userService,
@@ -48,9 +46,12 @@ func (c *AuthController) Login(ctx *gin.Context) {
 	var req LoginRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		c.logger.Errorf("Invalid login request: %v", err)
-		ctx.JSON(http.StatusBadRequest, responses.ErrorResponse{
-			Error: "Invalid request format",
-		})
+
+		ctx.Error(errors.NewBadRequestError(
+			errors.CodeInvalidRequest,
+			"Invalid request format",
+			fmt.Sprintf("Invalid login request: %v", err),
+		))
 		return
 	}
 
@@ -128,9 +129,11 @@ func (c *AuthController) RefreshToken(ctx *gin.Context) {
 func (c *AuthController) Logout(ctx *gin.Context) {
 	authHeader := ctx.GetHeader("Authorization")
 	if authHeader == "" {
-		ctx.JSON(http.StatusBadRequest, responses.ErrorResponse{
-			Error: "Authorization header is required",
-		})
+		ctx.Error(errors.NewBadRequestError(
+			errors.CodeInvalidRequest,
+			"Authorization header is required",
+			nil,
+		))
 		return
 	}
 
