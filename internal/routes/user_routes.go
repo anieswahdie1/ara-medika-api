@@ -25,6 +25,7 @@ func SetupUserRoutes(
 		userGroup.Use(middlewares.RoleMiddleware(string(entities.Admin), string(entities.SuperAdmin)))
 		{
 			userGroup.POST("/", userController.CreateUser)
+			userGroup.GET("/", userController.GetListUser)
 		}
 
 	}

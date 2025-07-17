@@ -29,6 +29,13 @@ func InitLogger(environment string) {
 		Logger.SetFormatter(&HumanFormatter{})
 		Logger.SetOutput(os.Stdout)
 	}
+
+	// Set level berdasarkan env
+	if environment == "development" {
+		Logger.SetLevel(logrus.DebugLevel)
+	} else {
+		Logger.SetLevel(logrus.InfoLevel)
+	}
 }
 
 type HumanFormatter struct{}

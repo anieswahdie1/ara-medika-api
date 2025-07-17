@@ -14,3 +14,10 @@ type UserResponse struct {
 	AccessMenu []entities.Menus `json:"access_menus"`
 	CreatedAt  time.Time        `json:"created_at"`
 }
+
+type GetUsers struct {
+	Name   string `json:"name"`
+	Email  string `json:"email"`
+	Role   string `json:"role"`
+	Status string `json:"status"`
+}

@@ -6,6 +6,7 @@ import (
 	"strconv"
 
 	"github.com/anieswahdie1/ara-medika-api.git/internal/models/entities"
+	"github.com/anieswahdie1/ara-medika-api.git/internal/models/requests"
 	"github.com/anieswahdie1/ara-medika-api.git/internal/models/responses"
 	"github.com/anieswahdie1/ara-medika-api.git/internal/services"
 	"github.com/anieswahdie1/ara-medika-api.git/pkg/validators"
@@ -80,13 +81,55 @@ func (controller *UserController) CreateUser(ctx *gin.Context) {
 	}
 	if err := controller.userService.CreateUser(&user); err != nil {
 		controller.logger.Errorf("Failed to create user: %v", err)
-		ctx.JSON(http.StatusCreated, responses.ErrorResponse{
+		ctx.JSON(http.StatusInternalServerError, responses.ErrorResponse{
 			Error: err.Error(),
 		})
 	}
 
 	ctx.JSON(http.StatusCreated, responses.SuccessResponse{
 		Message: "User created successfully",
+	})
+}
+
+func (controller *UserController) GetListUser(ctx *gin.Context) {
+	var (
+		request  requests.BaseGetListRequest
+		listUser []responses.GetUsers = make([]responses.GetUsers, 0)
+	)
+
+	if err := ctx.ShouldBindQuery(&request); err != nil {
+		controller.logger.Errorf(
+			"Failed to bind request: %v", err,
+		)
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"error": "Invalid request payload",
+		})
+		return
+	}
+
+	users, err := controller.userService.ListUsers(request)
+	if err != nil {
+		controller.logger.Errorf("Failed to get user: %v", err)
+		ctx.JSON(http.StatusInternalServerError, responses.ErrorResponse{
+			Error: err.Error(),
+		})
+		return
+	}
+
+	if len(users) > 0 {
+		for _, user := range users {
+			listUser = append(listUser, responses.GetUsers{
+				Name:   user.Name,
+				Email:  user.Email,
+				Role:   string(user.Role),
+				Status: map[bool]string{true: "active", false: "deactive"}[user.Active],
+			})
+		}
+	}
+	ctx.JSON(http.StatusOK, responses.Responses{
+		Code:        http.StatusOK,
+		Description: "SUCCESS",
+		Data:        listUser,
 	})
 }
 

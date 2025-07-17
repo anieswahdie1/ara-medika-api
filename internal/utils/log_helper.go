@@ -9,6 +9,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+// Logging middleware untuk HTTP request
 func HTTPLogger(next http.Handler) http.Handler {
 	return http.HandlerFunc(
 		func(w http.ResponseWriter, r *http.Request) {
@@ -21,6 +22,7 @@ func HTTPLogger(next http.Handler) http.Handler {
 			next.ServeHTTP(ww, r)
 
 			duration := time.Since(start)
+
 			Logger.WithFields(logrus.Fields{
 				"method":     r.Method,
 				"path":       r.URL.Path,

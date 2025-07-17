@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/anieswahdie1/ara-medika-api.git/internal/models/entities"
+	"github.com/anieswahdie1/ara-medika-api.git/internal/models/requests"
 	"gorm.io/gorm"
 )
 
@@ -14,7 +15,7 @@ type UserRepository interface {
 	FindByEmail(email string) (*entities.Users, error)
 	Update(user *entities.Users) error
 	Delete(id uint) error
-	FindAll(limit, offset int) ([]entities.Users, error)
+	FindUsers(request requests.BaseGetListRequest) ([]entities.Users, error)
 	FindAllMenus(roles string) ([]entities.Menus, error)
 }
 
@@ -62,12 +63,29 @@ func (r *userRepository) Delete(id uint) error {
 	return r.db.Delete(&entities.Users{}, id).Error
 }
 
-func (r *userRepository) FindAll(limit, offset int) ([]entities.Users, error) {
-	var users []entities.Users
-	err := r.db.Limit(limit).Offset(offset).Find(&users).Error
-	if err != nil {
+func (r *userRepository) FindUsers(request requests.BaseGetListRequest) ([]entities.Users, error) {
+	var (
+		users  []entities.Users
+		offset int
+	)
+
+	offset = (request.Page - 1) * request.Limit
+
+	queryBuilder := r.db.
+		Limit(request.Limit).
+		Offset(offset).
+		Order("created_at DESC").
+		Where("active = ?", "true").
+		Find(&users)
+
+	if request.Search != "" {
+		queryBuilder = queryBuilder.Where("name ILIKE ?", "%"+request.Search+"%")
+	}
+
+	if err := queryBuilder.Error; err != nil {
 		return nil, err
 	}
+
 	return users, nil
 }
 

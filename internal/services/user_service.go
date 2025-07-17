@@ -4,6 +4,7 @@ import (
 	"errors"
 
 	"github.com/anieswahdie1/ara-medika-api.git/internal/models/entities"
+	"github.com/anieswahdie1/ara-medika-api.git/internal/models/requests"
 	"github.com/anieswahdie1/ara-medika-api.git/internal/repositories"
 	"github.com/anieswahdie1/ara-medika-api.git/internal/utils"
 	"github.com/sirupsen/logrus"
@@ -15,7 +16,7 @@ type UserService interface {
 	GetUserByEmail(email string) (*entities.Users, error)
 	UpdateUser(user *entities.Users) error
 	DeleteUser(id uint) error
-	ListUsers(limit, offset int) ([]entities.Users, error)
+	ListUsers(request requests.BaseGetListRequest) ([]entities.Users, error)
 	ChangePassword(userID uint, oldPassword, newPassword string) error
 	ListMenus(roles string) ([]entities.Menus, error)
 }
@@ -109,10 +110,17 @@ func (s *userService) DeleteUser(id uint) error {
 	return s.userRepo.Delete(id)
 }
 
-func (s *userService) ListUsers(limit, offset int) ([]entities.Users, error) {
-	users, err := s.userRepo.FindAll(limit, offset)
+func (s *userService) ListUsers(request requests.BaseGetListRequest) ([]entities.Users, error) {
+	if request.Page == 0 {
+		request.Page = 1
+	}
+
+	if request.Limit == 0 {
+		request.Limit = 10
+	}
+	users, err := s.userRepo.FindUsers(request)
 	if err != nil {
-		s.logger.Errorf("Failed to list users: %v", err)
+		s.logger.Errorf("Failed to find users: %v", err)
 		return nil, errors.New("failed to list users")
 	}
 	return users, nil
